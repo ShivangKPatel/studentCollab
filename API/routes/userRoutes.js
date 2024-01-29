@@ -1,11 +1,11 @@
 /*
         This file contain the routes for the user
-        /user/getUser        => Input: username                    => Output: User data                       => method: GET
-        /user/register       => Input: username, email, password   => Output: User registered successfully    => method: POST
-        /user/login          => Input: username, password          => Output: User logged in successfully     => method: POST
-        /user/verify         => Input: token                       => Output: Email verifified successfully   => method: GET
-        /user/forgotpassword => Input: email                       => Output: Email sent successfully         => method: POST
-        /user/updatepassword => Input: Username, password          => Output: Password updated successfully   => method: POST
+        /user/getUser           => Input: username                    => Output: User data                       => method: GET
+        /user/register          => Input: username, email, password   => Output: User registered successfully    => method: POST
+        /user/login             => Input: username, password          => Output: User logged in successfully     => method: POST
+        /user/verify            => Input: token                       => Output: Email verifified successfully   => method: GET
+        /user/forgotpassword    => Input: email                       => Output: Email sent successfully         => method: POST
+        /user/updatepassword    => Input: Username, password          => Output: Password updated successfully   => method: POST
 */
 
 const bodyParser = require("body-parser");
@@ -62,7 +62,7 @@ router.post("/login", async function (req, res) {
             result = await DB.isVerified(userData.username);
             if (!result) {
                 return res.status(400).send({
-                    msg: "Please verify your email address before login",
+                    msg: "Email sent to your mail address. Please verify your email address before login",
                 });
             }
             return res.send({ msg: "User logged in successfully" });

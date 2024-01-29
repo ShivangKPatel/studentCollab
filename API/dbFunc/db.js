@@ -128,6 +128,7 @@ async function forgotPassword(email) {
         lowercase: true,
         strict: true,
     });
+
     //Update the password in database with new temporary password and send email to user for verification and also generate activation token for verification which contain username of user which is unique
     connection.query(
         `UPDATE student SET password = '${passcode}' WHERE email = '${email}'`
@@ -187,6 +188,36 @@ async function isVerified(username) {
     if (result.verified) {
         return true;
     }
+
+    // generate activation token
+    const token = jwt.sign(
+        {
+            data: `${result.student_id}`,
+        },
+        "ourSecretKey",
+        { expiresIn: "5m" }
+    );
+
+    const mailConfigurations = {
+        from: "smart20072020@gmail.com",
+        to: `${result.email}`,
+        subject: "Email Verification",
+        html: ` <div style='align-item: center; text-align: center;'>
+                      <div style="width: 400px; margin: 20px; background: white; border-radius: 10px; text-align: center; padding: 20px; box-shadow: 0px 0px 20px rgb(69, 69, 69); font-family: Arial, Helvetica, sans-serif;">
+                          <img src="https://raw.githubusercontent.com/ShivangKPatel/bookMyCelebration/shivang/public/webSiteLogo.png" style="height: 50px; width: 250px;">
+                          <h3>Hi! There, welcome to Student Collabration.</h3>
+                          <h4>May be you have registered yourself on our platform and so here is a email verification for you.</h4>
+                          <button style="padding: 10px; border: 0px; border-radius: 10px;">
+                              <a href="http://localhost:3010/user/verify/${token}" style="text-decoration: none; color: blue; background-color: transparent;">Click Here for verification</a>
+                          </button>
+                          <p>Thanks for registering with us.</p>
+                      </div>
+                  </div>`,
+    };
+    transporter.sendMail(mailConfigurations, function (error, info) {
+        if (error) throw Error(error);
+        console.log("Email Sent Successfully");
+    });
     return false;
 }
 

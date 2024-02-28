@@ -1,17 +1,36 @@
 /*
-        This file contain the routes for the user
-        /user/getUser           => Input: username                    => Output: User data                       => method: GET
+        This file contain the routes for the user-management
+        /user/getUser           => Input: stuId                       => Output: User data                       => method: GET
         /user/register          => Input: username, email, password   => Output: User registered successfully    => method: POST
         /user/login             => Input: username, password          => Output: User logged in successfully     => method: POST
         /user/verify            => Input: token                       => Output: Email verifified successfully   => method: GET
         /user/forgotpassword    => Input: email                       => Output: Email sent successfully         => method: POST
         /user/updatepassword    => Input: Username, password          => Output: Password updated successfully   => method: POST
+        /user/updateUser        => Input: firstname, lastname,        => Output: User updated successfully       => method: POST
+                                          username, password, 
+                                          email, phone_no, 
+                                          department, github, 
+                                          linkedin, resume 
+        /getUser/:stuID         => Input: who_stuID, whom_stuID
 */
 
 const bodyParser = require("body-parser");
 const express = require("express");
-const DB = require("../dbFunc/db.js");
+const DB = require("../dbFunc/userDB.js");
 const jwt = require("jsonwebtoken");
+const multer = require("multer");
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, "./uploads");
+    },
+    filename: function (req, file, cb) {
+        console.log(file);
+        cb(null, `${file.originalname}`);
+    },
+});
+
+const upload = multer({ storage: storage });
 
 const router = express.Router();
 router.use(bodyParser.urlencoded({ extended: true }));
@@ -43,6 +62,7 @@ router.post("/register", async function (req, res) {
         }
     } catch (err) {
         console.log(err);
+        return res.status(500).send({ msg: "Internal Server Error" });
     }
 });
 
@@ -100,7 +120,6 @@ router.get("/verify/:token", async function (req, res) {
             }
         });
     } catch (err) {
-        console.log(err);
         return res.status(500).send({ msg: "Internal Server Error" });
     }
 });
@@ -155,7 +174,7 @@ router.get("/forgotpassword/:token", async function (req, res) {
     }
 });
 
-router.post("/updatepassword", async function (req, res) {
+router.patch("/updatepassword", async function (req, res) {
     const userData = req.body;
     try {
         if (!userData.username || !userData.password) {
@@ -176,12 +195,31 @@ router.post("/updatepassword", async function (req, res) {
     }
 });
 
+router.get("/getUser/:who_stuID/:whom_stuID", async function (req, res) {
+    userData = req.params; //who_stuID, whom_stuID
+    try {
+        if (!userData.who_stuID || !userData.whom_stuID) {
+            return res.status(200).send({ msg: "Please pass student Id" });
+        }
+
+        //Search user data by username from database
+        result = await DB.getUserForDiffUser(userData);
+        if (result) {
+            res.send(result);
+        } else {
+            res.send({ msg: "User not found" });
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500).send({ msg: "Internal Server Error" });
+    }
+});
+
 router.get("/getUser", async function (req, res) {
-    userData = req.params.username; //username
-    userData = req.query.username; //username
+    userData = req.query.stuID; //student_id
     try {
         if (!userData) {
-            return res.status(200).send({ msg: "Please pass username" });
+            return res.status(200).send({ msg: "Please pass student Id" });
         }
 
         //Search user data by username from database
@@ -190,6 +228,59 @@ router.get("/getUser", async function (req, res) {
             res.send(result);
         } else {
             res.send({ msg: "User not found" });
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500).send({ msg: "Internal Server Error" });
+    }
+});
+
+router.patch("/updateRating", async function (req, res) {
+    userData = req.body; //who_studentID, whom_studentID, rating
+    try {
+        if (!userData.who_stuID || !userData.whom_stuID || !userData.rating) {
+            return res.status(200).send({
+                msg: "Please pass student_id and username and rating",
+            });
+        }
+
+        //Update rating by username from database
+        result = await DB.updateRating(userData);
+        if (result) {
+            res.send({
+                msg: "Rating updated successfully",
+                rating: result,
+            });
+        } else {
+            res.status(400).send({ msg: "Rating not updated" });
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500).send({ msg: "Internal Server Error" });
+    }
+});
+
+router.patch("/updateUser", async function (req, res) {
+    userData = req.body; //student_id, firstname, lastname, username, email, phone_no, department, github, linkedin, resume
+    console.log(userData);
+    // upload.array(userData.resume, 1, function (err, files) {
+    //     if (err) {
+    //         console.log(err);
+    //         return res.status(500).send({ msg: "Internal Server Error" });
+    //     }
+    //     console.log(files);
+    // });
+    try {
+        if (userData.username) {
+            return res.status(400).send({ msg: "Please pass user's data." });
+        }
+
+        //Update user data by username from database
+        result = await DB.updateUser(userData);
+        if (result) {
+            res.send({ msg: "User updated successfully" });
+        } else {
+            res.status(400).send({ msg: "User not updated" });
         }
     } catch (err) {
         console.log(err);

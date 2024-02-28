@@ -12,24 +12,6 @@ const connection = mysql2
         port: "3308",
     })
     .promise();
-
-// ================== Start of user ================== //
-async function getUser(username) {
-    result = {
-        Username: username,
-        rating: 4.5,
-        email: "shivang02052005@gmail.com",
-        contact: "1234567890",
-        department: "Computer Engineering",
-        year: "First Year",
-    };
-    if (username === "Shivang") {
-        return result;
-    } else {
-        return false;
-    }
-}
-
 var transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -38,6 +20,24 @@ var transporter = nodemailer.createTransport({
         pass: "lavamwbdgvqvemup",
     },
 });
+
+async function getUser(stuID) {
+    [result] = await connection.query(
+        `select student_id, firstname, lastname, username, email, phone_no, departmentID, rating, noofrating, no_project_done, github, linkedin, resume from student where student_id = '${stuID}'`
+    );
+    result = result[0];
+    if (result) return result;
+    return false;
+}
+
+async function getUserForDiffUser({ who_stuID, whom_stuID }) {
+    [result] = await connection.query(
+        `select student_id, firstname, lastname, username, email, phone_no, departmentID, rating as overallRating, noofrating, no_project_done, github, linkedin, resume, rating.ratingVal as ratingGivenByYou from student, rating where student_id = '${whom_stuID}' and rating.who = '${who_stuID}' and rating.whom = '${whom_stuID}'`
+    );
+    result = result[0];
+    if (result) return result;
+    return false;
+}
 
 async function searchUser(email, username) {
     [result] = await connection.query(
@@ -221,22 +221,66 @@ async function isVerified(username) {
     return false;
 }
 
-// ================== End of user ================== //
-
-// ================== Start of project ================== //
-async function getProject({ projectId }) {
-    result = {
-        projectId: projectId,
-        projectname: "Counting the number of people in the room",
-        rating: 4.5,
-        hostby: "shivang02052005@gmail.com",
-        reqStuNum: 10,
-        department:
-            "Computer Engineering, Mechanical engineering, Electrical Engineering, Business Administration",
-    };
-    return result;
+async function updateRating({ who_stuID, whom_stuID, rating }) {
+    //Update user rating in database
+    result = await connection.query(
+        `SELECT EXISTS(select ratingVal from rating where who = '${who_stuID}' and whom = '${whom_stuID}') as res`
+    );
+    console.log(result[0][0].res);
+    if (result[0][0].res) {
+        //Already rating given by this user
+        try {
+            await connection.query(
+                `UPDATE rating SET ratingVal = '${rating}' WHERE who = '${who_stuID}' and whom = '${whom_stuID}'`
+            );
+        } catch (err) {
+            console.log(err);
+            return false;
+        }
+    } else {
+        try {
+            await connection.query(
+                `insert into rating (who, whom, ratingVal) values ('${who_stuID}', '${whom_stuID}', '${rating}')`
+            );
+        } catch (err) {
+            console.log(err);
+            return false;
+        }
+    }
+    try {
+        connection.query(
+            `Update student set rating = (select avg(ratingVal) from rating where whom = '${whom_stuID}') where student_id = '${whom_stuID}'`
+        );
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+    return true;
 }
-// ================== End of project ================== //
+
+async function updateUser({
+    student_id,
+    firstname,
+    lastname,
+    Username,
+    email,
+    phone_no,
+    department,
+    github,
+    linkedin,
+    resume,
+}) {
+    //Update user data in database
+    try {
+        await connection.query(
+            `UPDATE student SET firstname = '${firstname}', lastname = '${lastname}', username = '${Username}', email = '${email}', phone_no = '${phone_no}', departmentID = '${department}', github = '${github}', linkedin = '${linkedin}' WHERE student_id = '${student_id}'`
+        );
+        return true;
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+}
 
 module.exports = {
     searchUser,
@@ -246,6 +290,8 @@ module.exports = {
     forgotPassword,
     verifyUser,
     isVerified,
+    updateUser,
     updatePassword,
-    getProject,
+    updateRating,
+    getUserForDiffUser,
 };

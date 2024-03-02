@@ -50,7 +50,10 @@ router.post("/createProject", async function (req, res) {
                 });
             } else {
                 if (await DB.createProject(projectData)) {
-                    res.send({ msg: "Project created successfully" });
+                    res.send({
+                        msg: "Project created successfully",
+                        project_id: projectData.projectID,
+                    });
                 } else {
                     res.status(400).send({
                         msg: "Project is not created due to some error. please try again.",

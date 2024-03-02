@@ -21,9 +21,9 @@ var transporter = nodemailer.createTransport({
     },
 });
 
-async function getUser(stuID) {
+async function getUser(username) {
     [result] = await connection.query(
-        `select student_id, firstname, lastname, username, email, phone_no, departmentID, rating, noofrating, no_project_done, github, linkedin, resume from student where student_id = '${stuID}'`
+        `select student_id, firstname, lastname, username, email, phone_no, departmentID, rating, noofrating, no_project_done, github, linkedin, resume from student where username = '${username}'`
     );
     result = result[0];
     if (result) return result;
@@ -31,12 +31,28 @@ async function getUser(stuID) {
 }
 
 async function getUserForDiffUser({ who_stuID, whom_stuID }) {
-    [result] = await connection.query(
-        `select student_id, firstname, lastname, username, email, phone_no, departmentID, rating as overallRating, noofrating, no_project_done, github, linkedin, resume, rating.ratingVal as ratingGivenByYou from student, rating where student_id = '${whom_stuID}' and rating.who = '${who_stuID}' and rating.whom = '${whom_stuID}'`
+    [result1] = await connection.query(
+        `select exists(select ratingVal from rating where who = '${who_stuID}' and whom = '${whom_stuID}') as res`
     );
-    result = result[0];
-    if (result) return result;
-    return false;
+    //if who user gave an rating to whom user then it will return 1 and so that it goes to else as per written condition and value of rating will be 0 if no data found in rating table.
+    if (!result1[0].res) {
+        [result] = await connection.query(
+            `select student_id, firstname, lastname, username, email, phone_no, departmentID, rating as overallRating, noofrating, no_project_done, github, linkedin, resume from student where student_id = '${whom_stuID}'`
+        );
+        result = result[0];
+        result.ratingGivenByYou = 0;
+    } else {
+        [result] = await connection.query(
+            `select student_id, firstname, lastname, username, email, phone_no, departmentID, rating as overallRating, noofrating, no_project_done, github, linkedin, resume, rating.ratingVal as ratingGivenByYou from student, rating where student_id = '${whom_stuID}' and rating.who = ${who_stuID} and rating.whom = ${whom_stuID}`
+        );
+        result = result[0];
+    }
+
+    // `select student_id, firstname, lastname, username, email, phone_no, departmentID, rating as overallRating, noofrating, no_project_done, github, linkedin, resume, rating.ratingVal as ratingGivenByYou from student, rating where student_id = '${whom_stuID}' and rating.who = '${who_stuID}' and rating.whom = '${whom_stuID}'`
+    console.log(result);
+    // result = result[0];
+    // if (result) return result;
+    return result;
 }
 
 async function searchUser(email, username) {
@@ -54,7 +70,7 @@ async function registerUser({ username, email, password }) {
     //Register user in database as well as send email to user for verification and also generate activation token for verification which contain username or userid which is unique
     //Add user into database with verification 0
     await connection.query(
-        `INSERT INTO student (username, email, password, verified) VALUES ('${username}', '${email}', '${password}', 0)`
+        `INSERT INTO student (username, email, password, verified, departmentID) VALUES ('${username}', '${email}', '${password}', 0, 3)`
     );
 
     const [result] = await connection.query(

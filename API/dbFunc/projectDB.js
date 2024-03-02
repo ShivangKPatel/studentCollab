@@ -41,10 +41,14 @@ async function validteProjectName(projectName, hostedBy) {
 
 async function createProject(projectData) {
     try {
-        // await connection.query(
-        //     `INSERT INTO project (project_name, project_defination, project_description, project_creator, project_creation_date, no_of_student_required, no_of_student_joined, student_required_by_department, hosted_by, required_time, project_level) VALUES ('${projectData.projectName}', '${projectData.projectDefination}', '${projectData.projectDescription}', '${projectData.projectCreator}', '${projectData.projectCreationDate}', '${projectData.noOfStudentRequired}', '${projectData.noOfStudentJoined}', '${projectData.studentRequiredByDepartment}', '${projectData.hostedBy}', '${projectData.requiredTime}', '${projectData.projectLevel}')`
-        // );
-        return false;
+        await connection.query(
+            `INSERT INTO project (projectName, projectDef, projectDesc, hostedBy, createDate, noOfStuReq, estTimeToComp, projectLevel) VALUES ('${projectData.projectName}', '${projectData.projectDefination}', '${projectData.projectDescription}', '${projectData.hostedBy}', '${projectData.hostedDate}', '${projectData.noOfStudentRequired}', '${projectData.timeToComp}', '${projectData.projectLevel}')`
+        );
+        [result] = await connection.query(
+            `select project_id from project where projectName = '${projectData.projectName}' and hostedBy = '${projectData.hostedBy}'`
+        );
+        result = result[0];
+        return result;
     } catch (err) {
         console.log(err);
         return err;

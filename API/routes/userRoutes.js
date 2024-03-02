@@ -1,6 +1,6 @@
 /*
         This file contain the routes for the user-management
-        /user/getUser           => Input: stuId                       => Output: User data                       => method: GET
+        /user/getUser           => Input: Username                    => Output: User data                       => method: GET
         /user/register          => Input: username, email, password   => Output: User registered successfully    => method: POST
         /user/login             => Input: username, password          => Output: User logged in successfully     => method: POST
         /user/verify            => Input: token                       => Output: Email verifified successfully   => method: GET
@@ -11,7 +11,8 @@
                                           email, phone_no, 
                                           department, github, 
                                           linkedin, resume 
-        /getUser/:stuID         => Input: who_stuID, whom_stuID
+        /getUser/:who_stuID
+                /:whom_stuID    => Input: who_stuID, whom_stuID       => Output: User data                       => method: GET
 */
 
 const bodyParser = require("body-parser");
@@ -21,10 +22,10 @@ const jwt = require("jsonwebtoken");
 const multer = require("multer");
 
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
+    destination: function(req, file, cb) {
         cb(null, "./uploads");
     },
-    filename: function (req, file, cb) {
+    filename: function(req, file, cb) {
         console.log(file);
         cb(null, `${file.originalname}`);
     },
@@ -35,7 +36,7 @@ const upload = multer({ storage: storage });
 const router = express.Router();
 router.use(bodyParser.urlencoded({ extended: true }));
 
-router.post("/register", async function (req, res) {
+router.post("/register", async function(req, res) {
     const userData = req.body;
     try {
         //Check for username, email and password
@@ -66,7 +67,7 @@ router.post("/register", async function (req, res) {
     }
 });
 
-router.post("/login", async function (req, res) {
+router.post("/login", async function(req, res) {
     const userData = req.body; // Username and Password
     try {
         //Check for username, email and password
@@ -95,7 +96,7 @@ router.post("/login", async function (req, res) {
     }
 });
 
-router.get("/verify/:token", async function (req, res) {
+router.get("/verify/:token", async function(req, res) {
     // Verification link for creating new Account (Registration link)
     try {
         const { token } = req.params;
@@ -105,7 +106,7 @@ router.get("/verify/:token", async function (req, res) {
         }
 
         // Verifying the JWT token
-        jwt.verify(token, "ourSecretKey", function (err, decoded) {
+        jwt.verify(token, "ourSecretKey", function(err, decoded) {
             if (err) {
                 console.log(err);
                 res.status(400).send(
@@ -124,7 +125,7 @@ router.get("/verify/:token", async function (req, res) {
     }
 });
 
-router.post("/forgotpassword", async function (req, res) {
+router.post("/forgotpassword", async function(req, res) {
     const userData = req.body; // Email address
 
     try {
@@ -150,10 +151,10 @@ router.post("/forgotpassword", async function (req, res) {
     }
 });
 
-router.get("/forgotpassword/:token", async function (req, res) {
+router.get("/forgotpassword/:token", async function(req, res) {
     const { token } = req.params;
     try {
-        jwt.verify(token, "ourSecretKey", function (err, decoded) {
+        jwt.verify(token, "ourSecretKey", function(err, decoded) {
             if (err) {
                 console.log(err);
                 res.status(400).send(
@@ -174,7 +175,7 @@ router.get("/forgotpassword/:token", async function (req, res) {
     }
 });
 
-router.patch("/updatepassword", async function (req, res) {
+router.patch("/updatepassword", async function(req, res) {
     const userData = req.body;
     try {
         if (!userData.username || !userData.password) {
@@ -195,7 +196,7 @@ router.patch("/updatepassword", async function (req, res) {
     }
 });
 
-router.get("/getUser/:who_stuID/:whom_stuID", async function (req, res) {
+router.get("/getUser/:who_stuID/:whom_stuID", async function(req, res) {
     userData = req.params; //who_stuID, whom_stuID
     try {
         if (!userData.who_stuID || !userData.whom_stuID) {
@@ -215,11 +216,11 @@ router.get("/getUser/:who_stuID/:whom_stuID", async function (req, res) {
     }
 });
 
-router.get("/getUser", async function (req, res) {
-    userData = req.query.stuID; //student_id
+router.get("/getUser", async function(req, res) {
+    userData = req.query.username; //Username
     try {
         if (!userData) {
-            return res.status(200).send({ msg: "Please pass student Id" });
+            return res.status(200).send({ msg: "Please pass Username." });
         }
 
         //Search user data by username from database
@@ -235,7 +236,7 @@ router.get("/getUser", async function (req, res) {
     }
 });
 
-router.patch("/updateRating", async function (req, res) {
+router.patch("/updateRating", async function(req, res) {
     userData = req.body; //who_studentID, whom_studentID, rating
     try {
         if (!userData.who_stuID || !userData.whom_stuID || !userData.rating) {
@@ -260,16 +261,16 @@ router.patch("/updateRating", async function (req, res) {
     }
 });
 
-router.patch("/updateUser", async function (req, res) {
+router.patch("/updateUser", async function(req, res) {
     userData = req.body; //student_id, firstname, lastname, username, email, phone_no, department, github, linkedin, resume
     console.log(userData);
-    // upload.array(userData.resume, 1, function (err, files) {
-    //     if (err) {
-    //         console.log(err);
-    //         return res.status(500).send({ msg: "Internal Server Error" });
-    //     }
-    //     console.log(files);
-    // });
+    upload.array(userData.resume, 1, function(err, files) {
+        if (err) {
+            console.log(err);
+            return res.status(500).send({ msg: "Internal Server Error" });
+        }
+        console.log(files);
+    });
     try {
         if (userData.username) {
             return res.status(400).send({ msg: "Please pass user's data." });

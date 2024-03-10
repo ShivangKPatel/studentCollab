@@ -32,7 +32,7 @@ async function getUser(username) {
 
 async function getUserForDiffUser({ who_stuID, whom_stuID }) {
     [result1] = await connection.query(
-        `select exists(select ratingVal from rating where who = '${who_stuID}' and whom = '${whom_stuID}') as res`
+        `select exists(select ratingVal from rating where who = '${who_stuID}' and whom = '${whom_stuID}' and cat='0') as res`
     );
     //if who user gave an rating to whom user then it will return 1 and so that it goes to else as per written condition and value of rating will be 0 if no data found in rating table.
     if (!result1[0].res) {
@@ -240,14 +240,14 @@ async function isVerified(username) {
 async function updateRating({ who_stuID, whom_stuID, rating }) {
     //Update user rating in database
     result = await connection.query(
-        `SELECT EXISTS(select ratingVal from rating where who = '${who_stuID}' and whom = '${whom_stuID}') as res`
+        `SELECT EXISTS(select ratingVal from rating where who = '${who_stuID}' and whom = '${whom_stuID}' and cat='0') as res`
     );
     console.log(result[0][0].res);
     if (result[0][0].res) {
         //Already rating given by this user
         try {
             await connection.query(
-                `UPDATE rating SET ratingVal = '${rating}' WHERE who = '${who_stuID}' and whom = '${whom_stuID}'`
+                `UPDATE rating SET ratingVal = '${rating}' WHERE who = '${who_stuID}' and whom = '${whom_stuID}' and cat='0'`
             );
         } catch (err) {
             console.log(err);
@@ -256,7 +256,7 @@ async function updateRating({ who_stuID, whom_stuID, rating }) {
     } else {
         try {
             await connection.query(
-                `insert into rating (who, whom, ratingVal) values ('${who_stuID}', '${whom_stuID}', '${rating}')`
+                `insert into rating (who, whom, ratingVal, cat) values ('${who_stuID}', '${whom_stuID}', '${rating}', '0')`
             );
         } catch (err) {
             console.log(err);
@@ -265,7 +265,7 @@ async function updateRating({ who_stuID, whom_stuID, rating }) {
     }
     try {
         connection.query(
-            `Update student set rating = (select avg(ratingVal) from rating where whom = '${whom_stuID}') where student_id = '${whom_stuID}'`
+            `Update student set rating = (select avg(ratingVal) from rating where whom = '${whom_stuID}' and cat='0') where student_id = '${whom_stuID}'`
         );
     } catch (err) {
         console.log(err);

@@ -7,7 +7,6 @@
                                           no-of-student-required, no-of-student-joined, 
                                           student-required-by-department, hosted_by, 
                                           required_time,                    
-
 */
 
 const bodyParser = require("body-parser");

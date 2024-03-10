@@ -218,6 +218,7 @@ router.get("/getUser/:who_stuID/:whom_stuID", async function(req, res) {
 
 router.get("/getUser", async function(req, res) {
     userData = req.query.username; //Username
+    console.log(userData)
     try {
         if (!userData) {
             return res.status(200).send({ msg: "Please pass Username." });

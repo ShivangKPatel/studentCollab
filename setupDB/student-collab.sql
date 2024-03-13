@@ -24,12 +24,13 @@ CREATE TABLE IF NOT EXISTS `department` (
   `DepartmentID` int NOT NULL AUTO_INCREMENT,
   `name` varchar(50) NOT NULL DEFAULT '',
   PRIMARY KEY (`DepartmentID`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table student-collab.department: ~2 rows (approximately)
 INSERT INTO `department` (`DepartmentID`, `name`) VALUES
 	(1, 'Computer Engineering'),
-	(2, 'Information Technology');
+	(2, 'Information Technology'),
+	(3, 'no');
 
 -- Dumping structure for table student-collab.project
 CREATE TABLE IF NOT EXISTS `project` (
@@ -58,13 +59,17 @@ CREATE TABLE IF NOT EXISTS `rating` (
   `ratingVal` int NOT NULL,
   `Who` bigint NOT NULL,
   `Whom` bigint NOT NULL,
+  `Cat` int NOT NULL DEFAULT '0',
   KEY `FK_rating_student` (`Who`),
   KEY `FK_rating_student_2` (`Whom`),
   CONSTRAINT `FK_rating_student` FOREIGN KEY (`Who`) REFERENCES `student` (`student_id`),
   CONSTRAINT `FK_rating_student_2` FOREIGN KEY (`Whom`) REFERENCES `student` (`student_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table student-collab.rating: ~0 rows (approximately)
+-- Dumping data for table student-collab.rating: ~2 rows (approximately)
+INSERT INTO `rating` (`ratingVal`, `Who`, `Whom`, `Cat`) VALUES
+	(4, 2, 3, 0),
+	(5, 3, 2, 0);
 
 -- Dumping structure for table student-collab.student
 CREATE TABLE IF NOT EXISTS `student` (
@@ -76,7 +81,7 @@ CREATE TABLE IF NOT EXISTS `student` (
   `email` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `phone_no` bigint DEFAULT '0',
   `departmentID` int NOT NULL,
-  `Rating` float NOT NULL DEFAULT '-1',
+  `Rating` float NOT NULL DEFAULT '0',
   `NoOfRating` int NOT NULL DEFAULT '0',
   `no_project_done` int DEFAULT '0',
   `github` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT '',
@@ -86,12 +91,13 @@ CREATE TABLE IF NOT EXISTS `student` (
   PRIMARY KEY (`student_id`),
   KEY `FK_student_department` (`departmentID`) USING BTREE,
   CONSTRAINT `FK_student_department` FOREIGN KEY (`departmentID`) REFERENCES `department` (`DepartmentID`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='student table';
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='student table';
 
--- Dumping data for table student-collab.student: ~2 rows (approximately)
+-- Dumping data for table student-collab.student: ~3 rows (approximately)
 INSERT INTO `student` (`student_id`, `firstname`, `lastname`, `username`, `password`, `email`, `phone_no`, `departmentID`, `Rating`, `NoOfRating`, `no_project_done`, `github`, `linkedin`, `resume`, `verified`) VALUES
-	(2, 'Shivang', 'Patel', 'Shivang_2005', 'NTkloxPjo2', 'shivang02052005@gmail.com', 6355703031, 1, 0, 0, 0, 'https://github.com/shivangkpatel/', 'https://www.linkedin.com/in/shivang-patel-36519a253', '', 1),
-	(3, 'Het', 'Bhagatji', 'Het_2005', 'Bhagatji', 'hetbhagatji09@gmail.com', 123456789, 2, 0, 0, 0, 'https://github.com/hetbhagatji/', 'https://www.linkedin.com/in/hetbhagat', '', 1);
+	(2, 'Shivang', 'Patel', 'undefined', 'NTkloxPjo2', 'shivang02052005@gmail.com', 6355703031, 1, 5, 0, 0, 'https://github.com/shivangkpatel/', 'https://www.linkedin.com/in/shivang-patel-36519a253', './uploads/resume/2.pdf', 1),
+	(3, 'Het', 'Bhagatji', 'Het_2005', 'Bhagatji', 'hetbhagatji09@gmail.com', 123456789, 2, 4, 0, 0, 'https://github.com/hetbhagatji/', 'https://www.linkedin.com/in/hetbhagat', '', 1),
+	(4, '', '', 'Raj_Shah_2004', 'Raj Shah', 'rajveershah7111@gmail.com', 0, 3, 0, 0, 0, '', '', '', 0);
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

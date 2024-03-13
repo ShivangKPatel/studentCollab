@@ -6,8 +6,8 @@
         /user/verify            => Input: token                       => Output: Email verifified successfully   => method: GET
         /user/forgotpassword    => Input: email                       => Output: Email sent successfully         => method: POST
         /user/updatepassword    => Input: Username, password          => Output: Password updated successfully   => method: POST
-        /user/updateUser        => Input: firstname, lastname,        => Output: User updated successfully       => method: POST
-                                          username, password, 
+        /user/updateUser        => Input: student_id, firstname,      => Output: User updated successfully       => method: POST
+                                          lastname, password, 
                                           phone_no, department, github, 
                                           linkedin, resume 
         /getUser/:who_stuID

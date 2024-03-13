@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Update User Form</title>
+</head>
+<body>
+    <form id="updateUserForm">
+        <label for="student_id">Student ID:</label>
+        <input type="text" name="student_id" id="student_id" required />
+
+        <label for="firstname">First Name:</label>
+        <input type="text" name="firstname" id="firstname" required />
+
+        <label for="lastname">Last Name:</label>
+        <input type="text" name="lastname" id="lastname" required />
+
+        <label for="phone_no">Phone Number:</label>
+        <input type="tel" name="phone_no" id="phone_no" required />
+
+        <label for="department">Department:</label>
+        <input type="text" name="department" id="department" required />
+
+        <label for="github">GitHub:</label>
+        <input type="url" name="github" id="github" required />
+
+        <label for="linkedin">LinkedIn:</label>
+        <input type="url" name="linkedin" id="linkedin" required />
+
+        <label for="resume">Resume:</label>
+        <input type="file" name="resume" id="resume" accept=".pdf" required />
+        
+        <button type="button" onclick="updateUser()">Update User</button>
+    </form>
+
+    <div id="resultContainer"></div>
+
+    <script>
+        async function updateUser() {
+            const form = document.getElementById("updateUserForm");
+            formData = new FormData(form);        
+            // Make a PATCH request to the API
+            fetch('http://localhost:3010/user/updateUser', {
+                method: 'PATCH',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Display the API response on the HTML page
+                const resultContainer = document.getElementById("resultContainer");
+                resultContainer.innerHTML = `<p>${JSON.stringify(data)}</p>`;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>

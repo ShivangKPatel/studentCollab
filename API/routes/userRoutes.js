@@ -8,8 +8,7 @@
         /user/updatepassword    => Input: Username, password          => Output: Password updated successfully   => method: POST
         /user/updateUser        => Input: firstname, lastname,        => Output: User updated successfully       => method: POST
                                           username, password, 
-                                          email, phone_no, 
-                                          department, github, 
+                                          phone_no, department, github, 
                                           linkedin, resume 
         /getUser/:who_stuID
                 /:whom_stuID    => Input: who_stuID, whom_stuID       => Output: User data                       => method: GET
@@ -20,23 +19,24 @@ const express = require("express");
 const DB = require("../dbFunc/userDB.js");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
-
-const storage = multer.diskStorage({
-    destination: function(req, file, cb) {
-        cb(null, "./uploads");
-    },
-    filename: function(req, file, cb) {
-        console.log(file);
-        cb(null, `${file.originalname}`);
-    },
-});
-
-const upload = multer({ storage: storage });
+const fs = require("fs");
+const { exit } = require("process");
 
 const router = express.Router();
 router.use(bodyParser.urlencoded({ extended: true }));
 
-router.post("/register", async function(req, res) {
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, "./uploads/resume");
+    },
+    filename: function (req, file, cb) {
+        console.log(file);
+        cb(null, `${file.originalname}`);
+    },
+});
+const upload = multer({ storage: storage });
+
+router.post("/register", async function (req, res) {
     const userData = req.body;
     try {
         //Check for username, email and password
@@ -67,7 +67,7 @@ router.post("/register", async function(req, res) {
     }
 });
 
-router.post("/login", async function(req, res) {
+router.post("/login", async function (req, res) {
     const userData = req.body; // Username and Password
     try {
         //Check for username, email and password
@@ -96,7 +96,7 @@ router.post("/login", async function(req, res) {
     }
 });
 
-router.get("/verify/:token", async function(req, res) {
+router.get("/verify/:token", async function (req, res) {
     // Verification link for creating new Account (Registration link)
     try {
         const { token } = req.params;
@@ -106,7 +106,7 @@ router.get("/verify/:token", async function(req, res) {
         }
 
         // Verifying the JWT token
-        jwt.verify(token, "ourSecretKey", function(err, decoded) {
+        jwt.verify(token, "ourSecretKey", function (err, decoded) {
             if (err) {
                 console.log(err);
                 res.status(400).send(
@@ -125,7 +125,7 @@ router.get("/verify/:token", async function(req, res) {
     }
 });
 
-router.post("/forgotpassword", async function(req, res) {
+router.post("/forgotpassword", async function (req, res) {
     const userData = req.body; // Email address
 
     try {
@@ -151,10 +151,10 @@ router.post("/forgotpassword", async function(req, res) {
     }
 });
 
-router.get("/forgotpassword/:token", async function(req, res) {
+router.get("/forgotpassword/:token", async function (req, res) {
     const { token } = req.params;
     try {
-        jwt.verify(token, "ourSecretKey", function(err, decoded) {
+        jwt.verify(token, "ourSecretKey", function (err, decoded) {
             if (err) {
                 console.log(err);
                 res.status(400).send(
@@ -175,7 +175,7 @@ router.get("/forgotpassword/:token", async function(req, res) {
     }
 });
 
-router.patch("/updatepassword", async function(req, res) {
+router.patch("/updatepassword", async function (req, res) {
     const userData = req.body;
     try {
         if (!userData.username || !userData.password) {
@@ -196,7 +196,7 @@ router.patch("/updatepassword", async function(req, res) {
     }
 });
 
-router.get("/getUser/:who_stuID/:whom_stuID", async function(req, res) {
+router.get("/getUser/:who_stuID/:whom_stuID", async function (req, res) {
     userData = req.params; //who_stuID, whom_stuID
     try {
         if (!userData.who_stuID || !userData.whom_stuID) {
@@ -216,9 +216,9 @@ router.get("/getUser/:who_stuID/:whom_stuID", async function(req, res) {
     }
 });
 
-router.get("/getUser", async function(req, res) {
+router.get("/getUser", async function (req, res) {
     userData = req.query.username; //Username
-    console.log(userData)
+    console.log(userData);
     try {
         if (!userData) {
             return res.status(200).send({ msg: "Please pass Username." });
@@ -237,7 +237,7 @@ router.get("/getUser", async function(req, res) {
     }
 });
 
-router.patch("/updateRating", async function(req, res) {
+router.patch("/updateRating", async function (req, res) {
     userData = req.body; //who_studentID, whom_studentID, rating
     try {
         if (!userData.who_stuID || !userData.whom_stuID || !userData.rating) {
@@ -262,31 +262,56 @@ router.patch("/updateRating", async function(req, res) {
     }
 });
 
-router.patch("/updateUser", async function(req, res) {
-    userData = req.body; //student_id, firstname, lastname, username, email, phone_no, department, github, linkedin, resume
+router.patch("/updateUser", upload.single("resume"), async function (req, res) {
+    const userData = req.body; //student_id, firstname, lastname, phone_no, department, github, linkedin, resume
     console.log(userData);
-    upload.array(userData.resume, 1, function(err, files) {
-        if (err) {
-            console.log(err);
-            return res.status(500).send({ msg: "Internal Server Error" });
-        }
-        console.log(files);
-    });
-    try {
-        if (userData.username) {
-            return res.status(400).send({ msg: "Please pass user's data." });
-        }
+    if (!userData.student_id && !userData.username) {
+        return res.status(400).send({ msg: "Please pass studentID." });
+    }
 
-        //Update user data by username from database
-        result = await DB.updateUser(userData);
-        if (result) {
-            res.send({ msg: "User updated successfully" });
+    // Write a code which changes the name of the file uploaded by the user to his/her studentID using fs
+    if (req.file) {
+        const oldPath = `./uploads/resume/${req.file.filename}`;
+        const newPath = `./uploads/resume/${userData.student_id}.pdf`;
+        const fExists = fs.existsSync(newPath);
+        if (fExists) {
+            fs.unlinkSync(newPath);
+            fs.rename(oldPath, newPath, (err) => {
+                try {
+                    if (err) {
+                        console.log(err);
+                    }
+                } catch (err) {
+                    res.status(500).send({ msg: "Internal Server Error" });
+                    exit(1); //Exit the process
+                }
+            });
         } else {
-            res.status(400).send({ msg: "User not updated" });
+            fs.rename(oldPath, newPath, (err) => {
+                try {
+                    if (err) {
+                        console.log(err);
+                    }
+                } catch (err) {
+                    res.status(500).send({ msg: "Internal Server Error" });
+                    exit(1); //Exit the process
+                }
+            });
+        }
+        userData.resume = newPath;
+    }else userData.resume = '';
+    
+    try {
+        // Update user data by username from the database
+        const result = await DB.updateUser(userData);
+        if (result) {
+            return res.send({ msg: "User updated successfully" });
+        } else {
+            return res.status(400).send({ msg: "User not updated" });
         }
     } catch (err) {
-        console.log(err);
-        res.status(500).send({ msg: "Internal Server Error" });
+        console.error(err);
+        return res.status(500).send({ msg: "Internal Server Error" });
     }
 });
 

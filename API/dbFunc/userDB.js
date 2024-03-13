@@ -278,8 +278,6 @@ async function updateUser({
     student_id,
     firstname,
     lastname,
-    Username,
-    email,
     phone_no,
     department,
     github,
@@ -289,7 +287,7 @@ async function updateUser({
     //Update user data in database
     try {
         await connection.query(
-            `UPDATE student SET firstname = '${firstname}', lastname = '${lastname}', username = '${Username}', email = '${email}', phone_no = '${phone_no}', departmentID = '${department}', github = '${github}', linkedin = '${linkedin}' WHERE student_id = '${student_id}'`
+            `UPDATE student SET firstname = '${firstname}', lastname = '${lastname}', phone_no = '${phone_no}', departmentID = '${department}', github = '${github}', linkedin = '${linkedin}', resume='${resume}' WHERE student_id = '${student_id}'`
         );
         return true;
     } catch (err) {

@@ -1,27 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Document</title>
-    </head>
-    <body>
-        <!-- <form action="http://localhost:3010/user/getUser" method="get"> -->
-        <form id="searchUser">
-            <input type="text" name="username" id="username" />
-            <button type="submit">Search</button>
-        </form>
-    </body>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+</head>
+<body>
+    <form id="searchUserForm">
+        <input type="text" name="username" id="username" />
+        <button type="button" onclick="searchUser()">Search</button>
+    </form>
+    <div id="resultContainer"></div>
+
     <script>
-        const foo = document.getElementById("searchUser");
-        foo.addEventListener("submit", (e) => {
-            e.preventDefault();
-            const formData = new FormData(foo);
-            console.log(formData);
-            fetch("http://localhost:3010/user/getUser", {
-                method: "GET",
-                query: formData,
-            });
-        });
+        function searchUser() {
+            const username = document.getElementById("username").value;
+
+            // Construct the API endpoint with the username as a query parameter
+            const apiUrl = `http://localhost:3010/user/getUser?username=${encodeURIComponent(username)}`;
+
+            // Make a GET request to the API
+            fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => {
+                // Display the API response on the HTML page
+                const resultContainer = document.getElementById("resultContainer");
+                resultContainer.innerHTML = `<p>User Data: ${JSON.stringify(data)}</p>`;
+            })
+            .catch(error => console.error('Error:', error));
+        }
     </script>
+</body>
 </html>

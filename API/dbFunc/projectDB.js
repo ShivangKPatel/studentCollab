@@ -26,23 +26,30 @@ async function getProject(projectId) {
     [result] = await connection.query(
         `select project_id, projectName, projectDef, projectDesc, createDate, noOfStuJoined, noOfStuReq, requiredDep, stuReqByDep, hostedBy, projectLevel, rating, estTimeToComp from project where project_id = '${projectId}'`
     );
+    result = result[0];
     return result;
 }
 
 async function validteProjectName(projectName, hostedBy) {
     // Check for project name is already taken by this host
-    // [result] = await connection.query(
-    //     `select project_id from project where project_name = '${projectName}' and hosted_by = '${hostedBy}'`
-    // );
-    //if true then project name is already taken by this host
-    // if (result.length != 0) return true;
-    return false;
+    try {
+        [result] = await connection.query(
+            `select exists(select project_id from project where projectName = '${projectName}' and hostedBy = '${hostedBy}') as result;`
+        );
+        return result[0].result;
+        // if true then project name is already taken by this host
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
 }
 
 async function createProject(projectData) {
+    var datetime = new Date();
+    currentDate = datetime.toISOString().slice(0, 10);
     try {
         await connection.query(
-            `INSERT INTO project (projectName, projectDef, projectDesc, hostedBy, createDate, noOfStuReq, estTimeToComp, projectLevel) VALUES ('${projectData.projectName}', '${projectData.projectDefination}', '${projectData.projectDescription}', '${projectData.hostedBy}', '${projectData.hostedDate}', '${projectData.noOfStudentRequired}', '${projectData.timeToComp}', '${projectData.projectLevel}')`
+            `INSERT INTO project (projectName, projectDef, projectDesc, createDate, noOfStuReq, requiredDep, hostedBy, projectLevel, estTimeToComp) VALUES ('${projectData.projectName}', '${projectData.projectDefination}', '${projectData.projectDescription}', '${currentDate}', '${projectData.noOfStudentRequired}', '${projectData.reqDep}', '${projectData.hostedBy}', '${projectData.projectLevel}', '${projectData.timeToComp}')`
         );
         [result] = await connection.query(
             `select project_id from project where projectName = '${projectData.projectName}' and hostedBy = '${projectData.hostedBy}'`
@@ -55,8 +62,21 @@ async function createProject(projectData) {
     }
 }
 
+async function getAllProject() {
+    try {
+        [result] = await connection.query(
+            `select p.project_id as pID, p.projectName as pName, p.projectDef as pDef, p.requiredDep as pReqDep, s.username as pHost, p.rating as pRating, p.projectLevel as pLevel, p.estTimeToComp as pTime FROM project p LEFT JOIN student s ON p.hostedBy = s.student_id`
+        );
+        return result;
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+}
+
 module.exports = {
     getProject,
     validteProjectName,
     createProject,
+    getAllProject,
 };

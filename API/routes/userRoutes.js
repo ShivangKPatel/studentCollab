@@ -30,7 +30,6 @@ const storage = multer.diskStorage({
         cb(null, "./uploads/resume");
     },
     filename: function (req, file, cb) {
-        console.log(file);
         cb(null, `${file.originalname}`);
     },
 });
@@ -69,6 +68,7 @@ router.post("/register", async function (req, res) {
 
 router.post("/login", async function (req, res) {
     const userData = req.body; // Username and Password
+    console.log(userData)
     try {
         //Check for username, email and password
         if (!userData.username || !userData.password) {
@@ -80,13 +80,13 @@ router.post("/login", async function (req, res) {
         //Check for usercredentials
         result = await DB.Login(userData);
         if (result) {
-            result = await DB.isVerified(userData.username);
-            if (!result) {
+            result1 = await DB.isVerified(userData.username);
+            if (!result1) {
                 return res.status(400).send({
                     msg: "Email sent to your mail address. Please verify your email address before login",
                 });
             }
-            return res.send({ msg: "User logged in successfully" });
+            return res.send({ msg: "User logged in successfully", userData: result });
         } else {
             return res.status(400).send({ msg: "Wrong Credentails." });
         }
@@ -218,7 +218,6 @@ router.get("/getUser/:who_stuID/:whom_stuID", async function (req, res) {
 
 router.get("/getUser", async function (req, res) {
     userData = req.query.username; //Username
-    console.log(userData);
     try {
         if (!userData) {
             return res.status(200).send({ msg: "Please pass Username." });
@@ -264,7 +263,6 @@ router.patch("/updateRating", async function (req, res) {
 
 router.patch("/updateUser", upload.single("resume"), async function (req, res) {
     const userData = req.body; //student_id, firstname, lastname, phone_no, department, github, linkedin, resume
-    console.log(userData);
     if (!userData.student_id && !userData.username) {
         return res.status(400).send({ msg: "Please pass studentID." });
     }

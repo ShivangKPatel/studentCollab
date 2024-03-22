@@ -74,9 +74,212 @@ async function getAllProject() {
     }
 }
 
+async function updateProject(projectData) {
+    try {
+        await connection.query(
+            `UPDATE project SET projectName = '${projectData.projectName}', projectDef = '${projectData.projectDefination}', projectDesc = '${projectData.projectDescription}', noOfStuReq = '${projectData.noOfStudentRequired}', requiredDep = '${projectData.reqDep}', projectLevel = '${projectData.projectLevel}', estTimeToComp = '${projectData.timeToComp}' WHERE project_id = '${projectData.projectId}'`
+        );
+        return true;
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+}
+
+async function sendRequest(projectId, studentId) {
+    try {
+        await connection.query(
+            `INSERT INTO projectrequest (project_id, student_id) VALUES ('${projectId}', '${studentId}')`
+        );
+        [result] = await connection.query(
+            `SELECT s.username as hUsername, s.email as hEmail, p.projectName as pName FROM student s, project p WHERE s.student_id = (SELECT hostedBy FROM project WHERE project_id = '${projectId}')`
+        );
+        const host = result[0];
+        [result] = await connection.query(
+            `SELECT s.username as sUsername, s.email as sEmail FROM student s WHERE s.student_id = '${studentId}'`
+        );
+        const student = result[0];
+
+        const mailOptions = {
+            from: student.sEmail,
+            to: host.hEmail,
+            subject: "Project Request Received",
+            html: `<div style='align-item: center; text-align: center;'>
+                        <div style="width: 400px; margin: 20px; background: white; border-radius: 10px; text-align: center; padding: 20px; box-shadow: 0px 0px 20px rgb(69, 69, 69); font-family: Arial, Helvetica, sans-serif;">
+                            <img src="https://raw.githubusercontent.com/ShivangKPatel/bookMyCelebration/shivang/public/webSiteLogo.png" style="height: 50px; width: 250px;">
+                            <h3>Hi! There, welcome to Student Collabration.</h3>
+                            <h4>You have received an request on your project ${host.pName} from ${student.sUsername}. Please click on the following link to see the more details about it.</h4>
+                            <button style="padding: 10px; border: 0px; border-radius: 10px;">
+                                <a href="http://localhost:3010/project/getProjectRequest/${projectId}" style="text-decoration: none; color: blue; background-color: transparent;">Click Here for verification</a>
+                            </button>
+                        </div>
+                        <p>Best regard</p><br>
+                        <p>The project team</p>
+                    </div>`
+        };
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.log(error);
+                return false;
+            } else {
+                console.log("Email sent: " + info.response);
+                return true;
+            }
+        });
+        return true;
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+}
+
+async function getProjectRequest(projectId) { // Get all the request you got on your project from students
+    try {
+        [result] = await connection.query(
+            `select s.student_id, s.username, s.email, s.rating from student s, projectrequest p where p.project_id = '${projectId}' and p.student_id = s.student_id and p.requestStatus = '-1'`
+        );
+        return result;
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+}
+
+async function acceptRequest(projectId, studentId) {
+    try {
+        await connection.query(
+            `UPDATE projectrequest SET requestStatus = '1' WHERE project_id = '${projectId}' and student_id = '${studentId}'`
+        );
+        
+        [result] = await connection.query(
+            `SELECT request_id FROM projectrequest WHERE project_id = '${projectId}' and student_id = '${studentId}'`
+        );
+        const requestId = result[0].request_id;
+
+        // Get host details
+        [result] = await connection.query(
+            `SELECT s.username as hUsername, s.email as hEmail, p.projectName as pName FROM student s, project p WHERE p.project_id = '${projectId}' and p.hostedBy = s.student_id`
+        );
+        const host = result[0];
+
+        // Get student details
+        [result] = await connection.query(
+            `SELECT s.username as sUsername, s.email as sEmail FROM student s WHERE s.student_id = '${studentId}'`
+        );
+        const student = result[0];
+        
+        // Compose email
+        const mailOptions = {
+            from: host.hEmail,
+            to: student.sEmail,
+            subject: "Project request accepted",
+            html: `<div style='align-item: center; text-align: center;'>
+                        <div style="width: 400px; margin: 20px; background: white; border-radius: 10px; text-align: center; padding: 20px; box-shadow: 0px 0px 20px rgb(69, 69, 69); font-family: Arial, Helvetica, sans-serif;">
+                            <img src="https://raw.githubusercontent.com/ShivangKPatel/bookMyCelebration/shivang/public/webSiteLogo.png" style="height: 50px; width: 250px;">
+                            <h3>Hi! There, welcome to Student Collabration.</h3>
+                            <h4>Host of the project ${host.hUsername} has accepted your request to join ${host.pName}. Please click on the following link to see the more details about it.</h4>
+                            <button style="padding: 10px; border: 0px; border-radius: 10px;">
+                                <a href="http://localhost:3010/project/requestStatusOfSpecProject/${requestId}/${studentId}" style="text-decoration: none; color: blue; background-color: transparent;">Click Here for verification</a>
+                            </button>
+                        </div>
+                    </div>
+                    <p>Best regard</p>
+                    <p>The project team</p>`
+        };
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.log(error);
+                return false;
+            } else {
+                console.log("Email sent: " + info.response);
+                return true;
+            }
+        });
+        return true;
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+}
+
+async function rejectRequest(projectId, studentId) {
+    try {
+        await connection.query(
+            `UPDATE projectrequest SET requestStatus = '0' WHERE project_id = '${projectId}' and student_id = '${studentId}'`
+        );
+        
+        [result] = await connection.query(
+            `SELECT request_id FROM projectrequest WHERE project_id = '${projectId}' and student_id = '${studentId}'`
+        );
+        const requestId = result[0].request_id;
+
+        // Get host details
+        [result] = await connection.query(
+            `SELECT s.username as hUsername, s.email as hEmail, p.projectName as pName FROM student s, project p WHERE p.project_id = '${projectId}' and p.hostedBy = s.student_id`
+        );
+        const host = result[0];
+
+        // Get student details
+        [result] = await connection.query(
+            `SELECT s.username as sUsername, s.email as sEmail FROM student s WHERE s.student_id = '${studentId}'`
+        );
+        const student = result[0];
+        
+        // Compose email
+        const mailOptions = {
+            from: host.hEmail,
+            to: student.sEmail,
+            subject: "Project request rejected",
+            html: `<div style='align-item: center; text-align: center;'>
+                        <div style="width: 400px; margin: 20px; background: white; border-radius: 10px; text-align: center; padding: 20px; box-shadow: 0px 0px 20px rgb(69, 69, 69); font-family: Arial, Helvetica, sans-serif;">
+                            <img src="https://raw.githubusercontent.com/ShivangKPatel/bookMyCelebration/shivang/public/webSiteLogo.png" style="height: 50px; width: 250px;">
+                            <h3>Hi! There, welcome to Student Collabration.</h3>
+                            <h4>Host of the project ${host.hUsername} has rejected your request for join ${host.pName}. Please click on the following link to see the more details about it. <br> Best of luck for next time.</h4>
+                            <button style="padding: 10px; border: 0px; border-radius: 10px;">
+                                <a href="http://localhost:3010/project/requestStatusOfSpecProject/${requestId}/${studentId}" style="text-decoration: none; color: blue; background-color: transparent;">Click Here for verification</a>
+                            </button>
+                        </div>
+                    </div>
+                    <p>Best regard</p>
+                    <p>The project team</p>`
+        };
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.log(error);
+                return false;
+            } else {
+                console.log("Email sent: " + info.response);
+                return true;
+            }
+        });
+        return true;
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+}
+
+async function requestStatusOfSpecProject(requestId, studentId) {
+    try {
+        [result] = await connection.query(
+            `select request_id, requestStatus from projectrequest where request_id = '${requestId}' and student_id = '${studentId}'`
+        );
+        return result;
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+}
+
 module.exports = {
     getProject,
     validteProjectName,
     createProject,
     getAllProject,
+    updateProject,
+    sendRequest,
+    getProjectRequest,
+    acceptRequest,
+    rejectRequest,
+    requestStatusOfSpecProject,
 };

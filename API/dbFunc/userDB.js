@@ -296,6 +296,16 @@ async function updateUser({
     }
 }
 
+async function getAllDept(){
+    try{
+        [result] = await connection.query(`select * from department`);
+        return result;
+    }catch(err){
+        console.log(err);
+        return false;
+    }
+}
+
 module.exports = {
     searchUser,
     getUser,
@@ -308,4 +318,5 @@ module.exports = {
     updatePassword,
     updateRating,
     getUserForDiffUser,
+    getAllDept
 };

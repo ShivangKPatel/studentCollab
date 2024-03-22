@@ -12,6 +12,11 @@
                                             Project-defination, Project-description,
                                             no-of-student-required, no-of-student-joined,
                                             student-required-by-department, required_time,
+        /project/sendRequest    => Input: projectId, studentId                           => Output: Request sent successfully        => method: POST
+        /project/getProjectRequest/:projectId => Input: projectId                        => Output: all the request for the project  => method: GET
+        /project/acceptRequest  => Input: projectId, studentId                           => Output: Request accepted successfully    => method: POST
+        /project/rejectRequest  => Input: projectId, studentId                           => Output: Request rejected successfully    => method: POST
+        /project/requestStatusOfSpecProject/:projectId/:studentId => Input: projectId, studentId => Output: Request status of the project => method: GET
 */
 
 const bodyParser = require("body-parser");
@@ -94,5 +99,126 @@ router.get("/getAllProject", async function(req, res){
         return res.status(500).send({msg: "Internal Server Error"});
     }
 })
+
+router.post("/updateProject", async function (req, res) {
+    projectData = req.body; // projectId, projectName, projectDefination, projectDescription, noOfStudentRequired, reqDep, projectLevel, timeToComp
+    try {
+        if (projectData) {
+            result = await DB.updateProject(projectData);
+            if (result) {
+                res.send({ msg: "Project updated successfully" });
+            } else {
+                res.status(400).send({ msg: "Project is not updated due to some error. please try again." });
+            }
+        }
+        else{
+            return res.status(400).send({ msg: "Please pass projectId" });
+        }
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send({ msg: "Internal Server Error" });
+    }
+});
+
+router.post("/sendRequest", async function (req, res) {
+    requestData = req.body; // projectId, studentId
+    console.log(requestData.projectId);
+    try {
+        if (requestData) {
+            result = await DB.sendRequest(requestData.projectId, requestData.studentId);
+            if (result) {
+                res.send({ msg: "Request sent successfully" });
+            } else {
+                res.status(400).send({ msg: "Request is not sent due to some error. please try again." });
+            }
+        }
+        else{
+            return res.status(400).send({ msg: "Please pass projectId and studentId" });
+        }
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send({ msg: "Internal Server Error" });
+    }
+});
+
+router.get("/getProjectRequest/:projectId", async function (req, res) {
+    requestData = req.params; // projectId
+    try {
+        if (requestData) {
+            result = await DB.getProjectRequest(requestData.projectId);
+            if (result) {
+                res.send(result);
+            } else {
+                res.status(400).send({ msg: "No request found" });
+            }
+        }
+        else{
+            return res.status(400).send({ msg: "Please pass projectId" });
+        }
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send({ msg: "Internal Server Error" });
+    }
+});
+
+router.post("/acceptRequest", async function (req, res) {
+    requestData = req.body; // projectId, studentId
+    try {
+        if (requestData) {
+            result = await DB.acceptRequest(requestData.projectId, requestData.studentId);
+            if (result) {
+                res.send({ msg: "Request accepted successfully" });
+            } else {
+                res.status(400).send({ msg: "Request is not accepted due to some error. please try again." });
+            }
+        }
+        else{
+            return res.status(400).send({ msg: "Please pass projectId and studentId" });
+        }
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send({ msg: "Internal Server Error" });
+    }
+});
+
+router.post("/rejectRequest", async function (req, res) {
+    requestData = req.body; // projectId, studentId
+    try {
+        if (requestData) {
+            result = await DB.rejectRequest(requestData.projectId, requestData.studentId);
+            if (result) {
+                res.send({ msg: "Request rejected successfully" });
+            } else {
+                res.status(400).send({ msg: "Request is not rejected due to some error. please try again." });
+            }
+        }
+        else{
+            return res.status(400).send({ msg: "Please pass projectId and studentId" });
+        }
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send({ msg: "Internal Server Error" });
+    }
+});
+
+router.get('/requestStatusOfSpecProject/:projectId/:studentId', async function(req, res){
+    requestData = req.params; // projectId, studentId
+    try {
+        if (requestData) {
+            result = await DB.requestStatusOfSpecProject(requestData.projectId, requestData.studentId);
+            if (result) {
+                res.send(result);
+            } else {
+                res.status(400).send({ msg: "No request found" });
+            }
+        }
+        else{
+            return res.status(400).send({ msg: "Please pass projectId and studentId" });
+        }
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send({ msg: "Internal Server Error" });
+    }
+});
 
 module.exports = router;

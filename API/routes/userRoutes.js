@@ -12,6 +12,7 @@
                                           linkedin, resume 
         /getUser/:who_stuID
                 /:whom_stuID    => Input: who_stuID, whom_stuID       => Output: User data                       => method: GET
+        /
 */
 
 const bodyParser = require("body-parser");
@@ -215,6 +216,20 @@ router.get("/getUser/:who_stuID/:whom_stuID", async function (req, res) {
         res.status(500).send({ msg: "Internal Server Error" });
     }
 });
+
+router.get("/getAllDepartments", async function(req, res){
+    try{
+        const dept = await DB.getAllDept();
+        if(dept){
+            res.send({dept : dept});
+        }else{
+            res.send({msg: "No departmnet listed"});
+        }
+    }catch(err){
+        console.log(err);
+        res.status(500).send("Internal server error");
+    }
+}); 
 
 router.get("/getUser", async function (req, res) {
     userData = req.query.username; //Username

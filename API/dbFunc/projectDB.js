@@ -24,7 +24,7 @@ var transporter = nodemailer.createTransport({
 
 async function getProject(projectId) {
     [result] = await connection.query(
-        `select project_id, projectName, projectDef, projectDesc, createDate, noOfStuJoined, noOfStuReq, requiredDep, stuReqByDep, hostedBy, projectLevel, rating, estTimeToComp from project where project_id = '${projectId}'`
+        `select project_id, projectName, projectDef, projectDesc, createDate, noOfStuJoined, noOfStuReq, requiredDep, stuReqByDep, hostedBy, projectLevel, p.rating, estTimeToComp, s.firstname as firstname, s.lastname as lastname from project p LEFT JOIN student s ON p.hostedBy = s.student_id where project_id = '${projectId}'`
     );
     result = result[0];
     return result;
@@ -65,7 +65,7 @@ async function createProject(projectData) {
 async function getAllProject() {
     try {
         [result] = await connection.query(
-            `select p.project_id as pID, p.projectName as pName, p.projectDef as pDef, p.requiredDep as pReqDep, s.username as pHost, p.rating as pRating, p.projectLevel as pLevel, p.estTimeToComp as pTime FROM project p LEFT JOIN student s ON p.hostedBy = s.student_id`
+            `select p.project_id as pID, p.projectName as pName, p.projectDef as pDef, p.requiredDep as pReqDep, s.username as pHost, p.rating as pRating, p.projectLevel as pLevel, p.estTimeToComp as pTime FROM project p LEFT JOIN student s ON p.hostedBy = s.student_id ORDER BY p.project_id DESC`
         );
         return result;
     } catch (err) {

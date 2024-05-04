@@ -9,9 +9,9 @@
                                           required_time,     
         /project/getAllProject  => Input: None                                           => Output: all the project detailes        => method: GET  
         /project/updateProject  => Input: projectId, Project-name,  project_level        => Output: Project updated successfully    => method: POST
-                                            Project-defination, Project-description,
-                                            no-of-student-required, no-of-student-joined,
-                                            student-required-by-department, required_time,
+                                          Project-defination, Project-description,
+                                          no-of-student-required, no-of-student-joined,
+                                          student-required-by-department, required_time,
         /project/sendRequest    => Input: projectId, studentId                           => Output: Request sent successfully        => method: POST
         /project/getProjectRequest/:projectId => Input: projectId                        => Output: all the request for the project  => method: GET
         /project/acceptRequest  => Input: projectId, studentId                           => Output: Request accepted successfully    => method: POST
@@ -32,7 +32,29 @@ router.post("/getProject", async function (req, res) {
         if (projectData) {
             result = await DB.getProject(projectData.projectId);
             if (result) {
-                res.send(result);
+                res.send({msg: "Project found", project: result});
+            } else {
+                res.status(400).send({ msg: "Project does not found" });
+            }
+        }
+        else{
+            res.status(400).send({ msg: "Please pass projectId" });
+        }
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send({ msg: "Internal Server Error" });
+    }
+});
+
+router.get("/getProject", async function (req, res) {
+    projectData = req.query.projectId;
+    console.log(projectData)
+    try {
+        if (projectData) {
+            result = await DB.getProject(projectData);
+            console.log(result)
+            if (result) {
+                res.send({msg: "Project found", project: result});
             } else {
                 res.status(400).send({ msg: "Project does not found" });
             }
@@ -48,6 +70,7 @@ router.post("/getProject", async function (req, res) {
 
 router.post("/createProject", async function (req, res) {
     projectData = req.body; // projectName, projectDefination, projectDescription, noOfStudentRequired, reqDep, hostedBy, projectLevel, timeToComp
+    console.log(projectData)
     try {
         if (projectData) {
             // Verify that the host does not have any other project with same name
@@ -63,7 +86,7 @@ router.post("/createProject", async function (req, res) {
                 result = await DB.createProject(projectData)
                 if(result) {
                     res.send({
-                        msg: "Project created successfully",
+                        msg: "Project successfully hosted",
                         projectId: result.project_id,
                     });
                 } else {
@@ -83,6 +106,7 @@ router.post("/createProject", async function (req, res) {
 });
 
 router.get("/getAllProject", async function(req, res){
+    console.log("Ok")
     try{
         result = await DB.getAllProject();
         if(result){

@@ -306,6 +306,16 @@ async function getAllDept(){
     }
 }
 
+async function getUserById(student_id){
+    try{
+        [result] = await connection.query(`select * from student where student_id = '${student_id}'`);
+        return result[0];
+    }catch(err){
+        console.log(err);
+        return false;
+    }
+}
+
 module.exports = {
     searchUser,
     getUser,
@@ -318,5 +328,6 @@ module.exports = {
     updatePassword,
     updateRating,
     getUserForDiffUser,
-    getAllDept
+    getAllDept,
+    getUserById
 };

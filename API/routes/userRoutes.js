@@ -12,7 +12,9 @@
                                           linkedin, resume 
         /getUser/:who_stuID
                 /:whom_stuID    => Input: who_stuID, whom_stuID       => Output: User data                       => method: GET
-        /
+        /user/updateRating      => Input: who_studentID, whom_studentID, rating => Output: Rating updated successfully => method: POST
+        /user/getAllDepartments => Input: None                         => Output: All departments                  => method: GET
+        /user/getUser/:id       => Input: id                           => Output: User data                       => method: GET
 */
 
 const bodyParser = require("body-parser");
@@ -74,7 +76,7 @@ router.post("/login", async function (req, res) {
         //Check for username, email and password
         if (!userData.username || !userData.password) {
             return res
-                .status(400)
+                
                 .send({ msg: "Please pass username and password" });
         }
 
@@ -83,17 +85,17 @@ router.post("/login", async function (req, res) {
         if (result) {
             result1 = await DB.isVerified(userData.username);
             if (!result1) {
-                return res.status(400).send({
+                return res.send({
                     msg: "Email sent to your mail address. Please verify your email address before login",
                 });
             }
             return res.send({ msg: "User logged in successfully", userData: result });
         } else {
-            return res.status(400).send({ msg: "Wrong Credentails." });
+            return res.send({ msg: "Wrong Credentails." });
         }
     } catch (err) {
         console.log(err);
-        return res.status(500).send({ msg: "Internal Server Error" });
+        return res.send({ msg: "Internal Server Error" });
     }
 });
 
@@ -203,13 +205,14 @@ router.get("/getUser/:who_stuID/:whom_stuID", async function (req, res) {
         if (!userData.who_stuID || !userData.whom_stuID) {
             return res.status(200).send({ msg: "Please pass student Id" });
         }
-
-        //Search user data by username from database
-        result = await DB.getUserForDiffUser(userData);
-        if (result) {
-            res.send(result);
-        } else {
-            res.send({ msg: "User not found" });
+        else{
+            //Search user data by username from database
+            result = await DB.getUserForDiffUser(userData);
+            if (result) {
+                res.send(result);
+            } else {
+                res.send({ msg: "User not found" });
+            }
         }
     } catch (err) {
         console.log(err);
@@ -232,7 +235,7 @@ router.get("/getAllDepartments", async function(req, res){
 }); 
 
 router.get("/getUser", async function (req, res) {
-    userData = req.query.username; //Username
+    userData = req.query.username; //username
     try {
         if (!userData) {
             return res.status(200).send({ msg: "Please pass Username." });
@@ -241,7 +244,26 @@ router.get("/getUser", async function (req, res) {
         //Search user data by username from database
         result = await DB.getUser(userData);
         if (result) {
-            res.send(result);
+            res.send({msg: "User found", userData: result});
+        } else {
+            res.send({ msg: "User not found" });
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500).send({ msg: "Internal Server Error" });
+    }
+});
+
+router.get("/getUser/:id", async function (req, res) {
+    userData = req.params.id; //userid
+    try {
+        if (!userData) {
+            return res.status(200).send({ msg: "Please pass userid." });
+        }
+        //Search user data by userid from database
+        result = await DB.getUserById(userData);
+        if (result) {
+            res.send({msg: "User found", userData: result});
         } else {
             res.send({ msg: "User not found" });
         }

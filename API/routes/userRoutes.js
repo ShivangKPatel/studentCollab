@@ -82,16 +82,17 @@ router.post("/login", async function (req, res) {
 
         //Check for usercredentials
         result = await DB.Login(userData);
+        result.verified = "0";
         if (result) {
             result1 = await DB.isVerified(userData.username);
             if (!result1) {
                 return res.send({
-                    msg: "Email sent to your mail address. Please verify your email address before login",
+                    msg: "Email sent to your mail address. Please verify your email address before login", userData: result
                 });
             }
             return res.send({ msg: "User logged in successfully", userData: result });
         } else {
-            return res.send({ msg: "Wrong Credentails." });
+            return res.send({ msg: "Wrong Credentails.", userData: result });
         }
     } catch (err) {
         console.log(err);

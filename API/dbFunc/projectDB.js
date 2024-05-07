@@ -112,9 +112,9 @@ async function sendRequest(projectId, studentId) {
                             <button style="padding: 10px; border: 0px; border-radius: 10px;">
                                 <a href="http://localhost:3010/project/getProjectRequest/${projectId}" style="text-decoration: none; color: blue; background-color: transparent;">Click Here for verification</a>
                             </button>
+                            <p>Best regard</p><br>
+                            <p>The project team</p>
                         </div>
-                        <p>Best regard</p><br>
-                        <p>The project team</p>
                     </div>`
         };
         transporter.sendMail(mailOptions, function (error, info) {
@@ -271,6 +271,75 @@ async function requestStatusOfSpecProject(requestId, studentId) {
     }
 }
 
+async function checkRequest(projectId, studentId) {
+    try {
+        [result] = await connection.query(
+            `select exists(select request_id from projectrequest where project_id = '${projectId}' and student_id = '${studentId}') as result;`
+        );
+        return result[0].result;
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+}
+
+async function searchProject(searchKey) {
+    // try{
+    //     [result1] = await connection.query(
+    //         `select department_id from department where departmentName LIKE '%${searchKey}%'`
+    //     )
+    // }catch(err){
+    //     console.log(err);
+    //     return false;
+    // }
+
+    try {
+        [result] = await connection.query(
+            `select p.project_id as pID, p.projectName as pName, p.projectDef as pDef, p.requiredDep as pReqDep, s.username as pHost, p.rating as pRating, p.projectLevel as pLevel, p.estTimeToComp as pTime FROM project p LEFT JOIN student s ON p.hostedBy = s.student_id WHERE p.projectName LIKE '%${searchKey}%' ORDER BY p.project_id DESC`
+        );
+        return result;
+    } catch (err) {
+        console.log(err);
+        return false;
+    }   
+}
+
+async function getProjectByHost(hostedBy) {
+    try {
+        [result] = await connection.query(
+            `select project_id, projectName, projectDef, projectDesc, createDate, noOfStuJoined, noOfStuReq, requiredDep, stuReqByDep, hostedBy, projectLevel, p.rating, estTimeToComp, s.firstname as firstname, s.lastname as lastname from project p LEFT JOIN student s ON p.hostedBy = s.student_id where hostedBy = '${hostedBy}'`
+        );
+        return result;
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+}
+
+async function getProjectByStudent(studentId) {
+    try {
+        [result] = await connection.query(
+            `select p.project_id, p.projectName, p.projectDef, p.projectDesc, p.createDate, p.noOfStuJoined, p.noOfStuReq, p.requiredDep, p.stuReqByDep, p.hostedBy, p.projectLevel, p.rating, p.estTimeToComp, s.firstname as firstname, s.lastname as lastname from project p LEFT JOIN student s ON p.hostedBy = s.student_id where p.project_id IN (select project_id from projectrequest where student_id = '${studentId}')`
+        );
+        return result;
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+}
+
+async function getJoinedByStudent(studentId) {
+    try {
+        [result] = await connection.query(
+            `select p.project_id, p.projectName, p.projectDef, p.projectDesc, p.createDate, p.noOfStuJoined, p.noOfStuReq, p.requiredDep, p.stuReqByDep, p.hostedBy, p.projectLevel, p.rating, p.estTimeToComp, s.firstname as firstname, s.lastname as lastname from project p LEFT JOIN student s ON p.hostedBy = s.student_id where p.project_id IN (select project_id from projectrequest where student_id = '${studentId} and requestStatus = '1')`
+        );
+        return result;
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+}
+
 module.exports = {
     getProject,
     validteProjectName,
@@ -282,4 +351,9 @@ module.exports = {
     acceptRequest,
     rejectRequest,
     requestStatusOfSpecProject,
+    checkRequest,
+    searchProject,
+    getProjectByHost,
+    getProjectByStudent,
+    getProjectByStudent,
 };

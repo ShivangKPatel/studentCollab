@@ -355,5 +355,5 @@ module.exports = {
     searchProject,
     getProjectByHost,
     getProjectByStudent,
-    getProjectByStudent,
+    getJoinedByStudent
 };

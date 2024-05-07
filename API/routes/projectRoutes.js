@@ -291,13 +291,13 @@ router.get('/getProjectByHost/:hostedBy', async function(req, res){
     }
 });
 
-router.get('/getAllPrjRelateWith/:studentId', async function(req, res){
+router.get('/getAllPrjRelateWith/:studentId', async function(req, res){ //Reqest log section - 1
     requestData = req.params; // studentId
     try {
         if (requestData) {
             result = await DB.getProjectByStudent(requestData.studentId);
             if (result) {
-                res.send(result);
+                res.send({prjData: result});
             } else {
                 res.status(200).send({ msg: "No project found" });
             }
